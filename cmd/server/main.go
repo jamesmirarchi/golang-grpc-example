@@ -22,6 +22,13 @@ func (s *server) Retrieve(ctx context.Context, in *pb.RetrieveRequest) (*pb.Retr
 	}, nil
 }
 
+func (s *server) Insert(ctx context.Context, in *pb.InsertRequest) (*pb.InsertResponse, error) {
+	log.Printf("Received Insert: %v", in)
+	return &pb.InsertResponse{
+		Response: map[string]string{"Received": "success"},
+	}, nil
+}
+
 func getFlights() []*pb.Flight {
 	sampleFlights := []*pb.Flight{
 		{
