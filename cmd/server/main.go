@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	pb "grpc-go/cmd/server/pb/event"
+	"io"
 	"log"
 	"net"
 	"time"
@@ -27,6 +28,49 @@ func (s *server) Insert(ctx context.Context, in *pb.InsertRequest) (*pb.InsertRe
 	return &pb.InsertResponse{
 		Response: map[string]string{"Received": "success"},
 	}, nil
+}
+
+func (s *server) FmbStream(srv pb.EventService_FmbStreamServer) error {
+	log.Println("starting stream...")
+	var fmb []*pb.Flight
+	ctx := srv.Context()
+	for {
+		// exit if context is done
+		// or continue
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		// receive data from stream
+		req, err := srv.Recv()
+		if err == io.EOF {
+			// return will close stream from server side
+			log.Println("exit")
+			return nil
+		}
+		if err != nil {
+			log.Printf("receive error %v", err)
+			continue
+		}
+
+		// // continue if number reveived from stream
+		// // less than max
+		// if req.Num <= max {
+		// 	continue
+		// }
+		if req.Action == "add" {
+			fmb = append(fmb, &pb.Flight{Id: req.Id, Pilot: req.Pilot, Squadron: req.Squadron, FuelStatus: req.FuelStatus, Ac: req.Ac, LastUpdate: time.Now().String()})
+		}
+
+		// update max and send it to stream
+		resp := pb.FmbStreamResponse{Flights: fmb}
+		if err := srv.Send(&resp); err != nil {
+			log.Printf("send error %v", err)
+		}
+		log.Printf("send new flights=%s", fmb)
+	}
 }
 
 func getFlights() []*pb.Flight {

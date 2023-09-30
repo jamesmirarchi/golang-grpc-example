@@ -62,10 +62,26 @@ message RetrieveResponse {
   repeated Flight flights = 1;
 }
 
+message FmbStreamRequest {
+  string id = 1;
+  string pilot = 2;
+  string squadron = 3;
+  string ac = 4;
+  float fuel_status = 5;
+  string last_update = 6;
+  string action = 7;
+}
+
+message FmbStreamResponse {
+  repeated Flight flights = 1;
+}
+
 
 service EventService {  
   rpc Insert(InsertRequest) returns (InsertResponse) {}
   rpc Update(UpdateRequest) returns (UpdateResponse) {}
   rpc Remove(RemoveRequest) returns (RemoveResponse) {}
   rpc Retrieve(RetrieveRequest) returns (RetrieveResponse) {}
+
+  rpc FmbStream(stream FmbStreamRequest) returns (stream FmbStreamResponse) {}
 }
